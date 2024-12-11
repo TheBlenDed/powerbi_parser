@@ -115,8 +115,8 @@ def parser_tables_formulas(model_path):
                 if 'expression' in source:
                     expression = source['expression']
                     if source['type'] == 'calculated':
-                        table_formula = expression # Если таблица Calculated, то в expression лежит Excel формула
-                    else: # Если таблица не calculated, но в expression список действий. На 0 строке 'let', на 1-й 'Источник = ...'
+                        table_formula = '\n'.join(expression) # Если таблица Calculated, то в expression лежит Excel формула. Она может быть в несколько строк, объединяем в одну
+                    else: # Если таблица не calculated, то в expression список действий. На 0 строке 'let', на 1-й 'Источник = ...'
                         table_formula = expression[1].strip().replace('Источник = ', '')
         table_cols = (table['measures'] if 'measures' in table else []) + (table['columns'] if 'columns' in table else [])
         if not table_cols:
@@ -125,12 +125,15 @@ def parser_tables_formulas(model_path):
             if enable_print: print('–'*50)
             col_name = col['name']
             if 'expression' in col:
-                col_formula = col['expression'].replace('\n', '')
+                col_formula = col['expression']
+                if type(col_formula) == list:
+                    col_formula = '\n'.join(col_formula) # Оказалось, что в формула может быть записана построчно и являться list. На этот случай просто джойним в одну строку через \n
                 # Лямбда-функция для применения регулярки на выражение. Возвращает отсортированный список без дубликатов
                 mahinatsii = lambda pattern, text: '\n'.join(sorted(set(re.findall(pattern, text)))).replace('\'', '')
                 # ------------------------------------------
                 col_table_sources = mahinatsii(r'\'.*?\'', col_formula) # Регулярка для поиска 'Таблица', ищем все таблицы-источники
-                col_col_sources = mahinatsii(r'\'[^\']*?\'\[.*?\]', col_formula) # регулярка для поиска 'Таблица'[Значение], ищем все атрибуты-источники
+                col_col_sources = mahinatsii(r'(\'[^\']*?\')?\[.*?\]', col_formula) # регулярка для поиска 'Таблица'[Значение], ищем все атрибуты-источники
+                #col_col_sources = mahinatsii(r'\[.*?\]', col_formula) # регулярка для поиска 'Таблица'[Значение], ищем все атрибуты-источники
             else:
                 col_formula = ''
                 col_col_sources = ''
