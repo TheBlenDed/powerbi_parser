@@ -155,7 +155,7 @@ def elements_sources_parcer(report_path, columns_dictionary): # returns DataFram
                 dir = source
                 while 'Property' not in dir:
                     dir = dir[list(dir.keys())[0]]
-                source_table_field = dir['Property']
+                source_table_field = dir['Property'].replace('+virtual', '')
 
                 source_str = f'{source_table}[{source_table_field}]'
                 row_to_write = ([page_number
