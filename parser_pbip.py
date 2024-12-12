@@ -14,31 +14,43 @@ pandas = import_lib('pandas')
 openpyxl = import_lib('openpyxl')
 
 def main():
-    listdir = os.listdir()
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    listdir = os.listdir(current_directory)
     r = re.compile(r'.*\.pbip') # Регулярка для поиска *.pbip файлов
     matches = list(filter(r.match, listdir))
     if len(matches) == 0:
         print ('No .pbip found in directory. 1 should be')
-        return False
+        return
     elif len(matches) > 1:
         print ('More than 2 .pbip files. Only 1 should be in directory')
-        return False
+        return
     pbip_file_name = matches[0].replace('.pbip', '')
-    model_path = pbip_file_name + '.SemanticModel\\model.bim' # У папки такое же название, как у файла, только в конце .SemanticModel
-    report_path = pbip_file_name + '.Report\\report.json' # У папки такое же название, как у файла, только в конце .Report
+    model_path = current_directory + '\\' + pbip_file_name + '.SemanticModel\\model.bim' # У папки такое же название, как у файла, только в конце .SemanticModel
+    report_path = current_directory + '\\' + pbip_file_name + '.Report\\report.json' # У папки такое же название, как у файла, только в конце .Report
     output_file_name = pbip_file_name + ' СВЯЗИ.xlsx' # Название выходного .csv файла
     
     if not (model_path and report_path):
         return
-    
-    columns_dictionary = parser_tables_formulas(model_path)
-    output_table = elements_sources_parcer(report_path, columns_dictionary)
     try:
-        output_table.to_excel(output_file_name
+        columns_dictionary = parser_tables_formulas(model_path)
+        print ('model.bim parsed successfully')
+    except:
+        print ('Error parsing model.bim')
+        return
+    try:
+        output_table = elements_sources_parcer(report_path, columns_dictionary)
+        print ('report.json parsed successfully')
+    except:
+        print ('Error parsing report.json')
+        return
+    try:
+        output_table.to_excel(current_directory + '\\' + output_file_name
                             , sheet_name = 'Источники'
                             , index = False)
+        print (f'{output_file_name} saved successfully')
     except:
-        print ('Unable to save file')
+        print (f'Unable to save {output_file_name}')
+        return
 
 def parser_tables_formulas(model_path):
 
@@ -165,3 +177,4 @@ def elements_sources_parcer(report_path, columns_dictionary): # returns DataFram
 
 if __name__ == '__main__':
     main()
+    input("Press any key to exit")
