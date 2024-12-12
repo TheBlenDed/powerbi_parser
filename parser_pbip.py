@@ -34,22 +34,25 @@ def main():
     try:
         columns_dictionary = parser_tables_formulas(model_path)
         print ('model.bim parsed successfully')
-    except:
+    except Exception as e:
         print ('Error parsing model.bim')
+        print (e)
         return
     try:
         output_table = elements_sources_parcer(report_path, columns_dictionary)
         print ('report.json parsed successfully')
-    except:
+    except Exception as e:
         print ('Error parsing report.json')
+        print (e)
         return
     try:
         output_table.to_excel(current_directory + '\\' + output_file_name
                             , sheet_name = 'Источники'
                             , index = False)
         print (f'{output_file_name} saved successfully')
-    except:
+    except Exception as e:
         print (f'Unable to save {output_file_name}')
+        print (e)
         return
 
 def parser_tables_formulas(model_path):
@@ -111,17 +114,17 @@ def parser_tables_formulas(model_path):
             tables_and_columns_dictionary[f'{table_name}[{col_name}]'] = column_dict
     return tables_and_columns_dictionary
 
-def elements_sources_parcer(report_path, columns_dictionary): # returns DataFrame
+def elements_sources_parcer(report_path, tables_and_columns_dictionary): # returns DataFrame
 
     headers = ['Номер страницы'                         # page_number
             , 'Страница'                                # page_name
             , 'ID элемента'                             # element_id
             , 'Используемые в элементе атрибуты'        # source_str
-            , 'Таблица источник'                        # columns_dictionary[source_str][table_name]
-            , 'Power Query создания таблицы источника'  # columns_dictionary[source_str][table_formula]
-            , 'Формула атрибута'                        # columns_dictionary[source_str][col_formula]
-            , 'Таблица источник атрибута'               # columns_dictionary[source_str][col_table_sources]
-            , 'Атрибуты из формулы'                     # columns_dictionary[source_str][col_col_sources]
+            , 'Таблица источник'                        # tables_and_columns_dictionary[source_str][table_name]
+            , 'Power Query создания таблицы источника'  # tables_and_columns_dictionary[source_str][table_formula]
+            , 'Формула атрибута'                        # tables_and_columns_dictionary[source_str][col_formula]
+            , 'Таблица источник атрибута'               # tables_and_columns_dictionary[source_str][col_table_sources]
+            , 'Атрибуты из формулы'                     # tables_and_columns_dictionary[source_str][col_col_sources]
             ]
     sort_order = [headers[0]
                 , headers[2]
@@ -163,14 +166,12 @@ def elements_sources_parcer(report_path, columns_dictionary): # returns DataFram
                                 , element_id
                                 , source_str
                                 ])
-
-                if source_str in columns_dictionary:
-                    row_to_write.append(columns_dictionary[source_str]['table_name'])
-                    row_to_write.append(columns_dictionary[source_str]['table_formula'])
-                    row_to_write.append(columns_dictionary[source_str]['col_formula'])
-                    row_to_write.append(columns_dictionary[source_str]['col_table_sources'])
-                    row_to_write.append(columns_dictionary[source_str]['col_col_sources'])
-
+            if source_str in tables_and_columns_dictionary:
+                row_to_write.append(tables_and_columns_dictionary[source_str]['table_name'])
+                row_to_write.append(tables_and_columns_dictionary[source_str]['table_formula'])
+                row_to_write.append(tables_and_columns_dictionary[source_str]['col_formula'])
+                row_to_write.append(tables_and_columns_dictionary[source_str]['col_table_sources'])
+                row_to_write.append(tables_and_columns_dictionary[source_str]['col_col_sources'])
                 df.append(row_to_write)
     df = pandas.DataFrame(df, columns = headers)
     return df.sort_values(sort_order)
